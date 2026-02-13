@@ -32,6 +32,7 @@
         input, select, textarea { width: 100%; background: #000; border: 1px solid var(--ri-border); color: #fff; padding: 12px; margin: 10px 0; }
         .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin: 5px 0; }
         .btn-danger { background: #440000; color: #ff8888; }
+        .btn-small { padding: 5px 10px; font-size: 0.7rem; }
         .online-dot { height: 10px; width: 10px; background-color: #00ff00; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 8px #00ff00; }
         .hidden { display: none !important; }
         table { width: 100%; border-collapse: collapse; }
@@ -92,7 +93,7 @@
 
         <div id="page-personnel" class="page">
             <h2>PERSONNEL DIRECTORY</h2>
-            <div class="card"><table><thead><tr><th>Operative</th><th>Rank</th><th>Dept</th><th>Status</th></tr></thead><tbody id="personnel-body"></tbody></table></div>
+            <div class="card"><table><thead><tr><th>Operative</th><th>Rank</th><th>Oversight</th><th>Dept</th><th>Status</th></tr></thead><tbody id="personnel-body"></tbody></table></div>
         </div>
 
         <div id="page-create" class="page">
@@ -109,46 +110,18 @@
         <div id="page-manage-users" class="page">
             <h2>MASTER OVERRIDE</h2>
             <div class="card">
-                <h3>SYSTEM CONTROL</h3>
-                <button id="lockdown-btn" class="btn" onclick="toggleLockdown()">ENABLE LOCKDOWN</button>
-                <button class="btn btn-danger" onclick="wipeChat()">WIPE GLOBAL CHAT</button>
-            </div>
-            <div class="card">
-                <h3>GLOBAL ANNOUNCEMENT</h3>
-                <input type="text" id="announcement-in" placeholder="Broadcast text...">
-                <button class="btn" onclick="broadcastAnnouncement()">SET</button>
-                <button class="btn btn-danger" onclick="clearAnnouncement()">CLEAR</button>
-            </div>
-            <div class="card">
                 <h3>AUTHORIZE NEW OPERATIVE</h3>
                 <input type="text" id="new-u" placeholder="Username">
                 <input type="text" id="new-p" placeholder="Password">
-                <label>Clearance Rank:</label>
-                <select id="new-r">
-                    <option value="Director">Director</option>
-                    <option value="Deputy Director">Deputy Director</option>
-                    <option value="Executive Director">Executive Director</option>
-                    <option value="Supervisor">Supervisor</option>
-                    <option value="Overseer">Overseer</option>
-                    <option value="Field Officer">Field Officer</option>
-                    <option value="Senior Agent">Senior Agent</option>
-                    <option value="Field Agent">Field Agent</option>
-                    <option value="Junior Agent">Junior Agent</option>
-                    <option value="Agent">Agent</option>
-                    <option value="Intern">Intern</option>
-                </select>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                    <div><label>Clearance Rank:</label><select id="new-r"><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Executive Director">Executive Director</option><option value="Supervisor">Supervisor</option><option value="Overseer">Overseer</option><option value="Field Officer">Field Officer</option><option value="Senior Agent">Senior Agent</option><option value="Field Agent">Field Agent</option><option value="Junior Agent">Junior Agent</option><option value="Agent">Agent</option><option value="Intern">Intern</option></select></div>
+                    <div><label>Oversight Tag:</label><select id="new-o"><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></div>
+                </div>
                 <label>Assigned Department:</label>
-                <select id="new-d">
-                    <option value="High Command">High Command</option>
-                    <option value="Analysis">Analysis</option>
-                    <option value="Internal Affairs">Internal Affairs</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Public Affairs">Public Affairs</option>
-                    <option value="Unassigned">Unassigned (NA)</option>
-                </select>
+                <select id="new-d"><option value="High Command">High Command</option><option value="Analysis">Analysis</option><option value="Internal Affairs">Internal Affairs</option><option value="Operations">Operations</option><option value="Public Affairs">Public Affairs</option><option value="Unassigned">Unassigned (NA)</option></select>
                 <button class="btn" onclick="createUser()">AUTHORIZE</button>
             </div>
-            <div class="card"><h3>USER REGISTRY</h3><table><tbody id="user-list"></tbody></table></div>
+            <div class="card"><h3>USER REGISTRY</h3><table><thead><tr><th>User (Rank)</th><th>Oversight</th><th>Dept</th><th>Action</th></tr></thead><tbody id="user-list"></tbody></table></div>
         </div>
 
         <div id="page-ax-logs" class="page">
@@ -161,28 +134,25 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, push, onValue, remove, query, limitToLast, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        const firebaseConfig = { 
-            apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", 
-            authDomain: "isb-command-portal.firebaseapp.com", 
-            projectId: "isb-command-portal", 
-            databaseURL: "https://sim-official-default-rtdb.firebaseio.com" 
-        };
+        const firebaseConfig = { apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", authDomain: "isb-command-portal.firebaseapp.com", projectId: "isb-command-portal", databaseURL: "https://sim-official-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         let currentSession = null, cloudUsers = [], masterTS = 0, isLockdown = false;
 
+        const rankOptions = ["Director", "Deputy Director", "Executive Director", "Supervisor", "Overseer", "Field Officer", "Senior Agent", "Field Agent", "Junior Agent", "Agent", "Intern"];
+        const deptOptions = ["High Command", "Analysis", "Internal Affairs", "Operations", "Public Affairs", "Unassigned"];
+        const oversightOptions = ["None", "INF", "SOB", "RSF", "High Command"];
+
         window.login = async () => {
             const u = document.getElementById('user-in').value, p = document.getElementById('pass-in').value;
-            // Updated Atlas rank to Site Manager
-            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", d: "High Command", id:"master"} : null);
+            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", o:"High Command", d: "High Command", id:"master"} : null);
             
             if(user) {
                 const isDirector = ["Director", "Deputy Director", "Executive Director", "Site Manager"].includes(user.r);
                 const isSupervisor = user.r === "Supervisor";
                 const lowRanks = ["Senior Agent", "Field Agent", "Junior Agent", "Agent", "Intern"];
 
-                if(isLockdown && !isDirector && u !== "Voidyaep") { alert("SYSTEM IN LOCKDOWN: ACCESS DENIED"); return; }
-
+                if(isLockdown && !isDirector && u !== "Voidyaep") { alert("SYSTEM IN LOCKDOWN"); return; }
                 currentSession = user;
                 document.getElementById('user-display').innerText = `${u} [${user.r}]`;
                 document.getElementById('secure-nav').classList.remove('hidden');
@@ -200,7 +170,6 @@
 
                 const isHC = isDirector || isSupervisor || ["Field Officer", "Overseer"].includes(user.r);
                 document.querySelectorAll('.dept-btn').forEach(b => b.classList.toggle('hidden', !isHC));
-                
                 if(!isHC && !lowRanks.includes(user.r)) {
                     const btnId = {"Analysis":"nav-analysis", "Internal Affairs":"nav-ia", "Operations":"nav-operations", "Public Affairs":"nav-public"}[user.d];
                     if(btnId) document.getElementById(btnId).classList.remove('hidden');
@@ -211,106 +180,44 @@
 
                 if(user.id === "master") {
                     set(ref(db, 'presence/master'), Date.now());
-                    onDisconnect(ref(db, 'presence/master')).set(0);
-                    setInterval(() => set(ref(db, 'presence/master'), Date.now()), 20000);
                 } else if (user.id) {
                     update(ref(db, `users/${user.id}`), { lastSeen: Date.now() });
-                    onDisconnect(ref(db, `users/${user.id}`)).update({ lastSeen: 0 });
-                    setInterval(() => update(ref(db, `users/${user.id}`), { lastSeen: Date.now() }), 20000);
                 }
-
-                try {
-                    const res = await fetch('https://api.ipify.org?format=json');
-                    const ipData = await res.json();
-                    push(ref(db, 'ax_secure_logs'), { t: new Date().toLocaleString(), u: u, ip: ipData.ip });
-                } catch(e) {}
                 window.router('chat');
             } else alert("ACCESS DENIED");
         };
 
-        window.router = (id) => {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
-            if(id === 'audit') {
-                onValue(query(ref(db, 'audit'), limitToLast(50)), snap => {
-                    document.getElementById('audit-list').innerHTML = snap.val() ? Object.values(snap.val()).reverse().map(a => `<tr><td>${a.t}</td><td>${a.u}</td><td>${a.a}</td><td>${a.f}</td></tr>`).join('') : "";
-                });
-            }
-            if(id.startsWith('dept-')) {
-                const target = id.replace('dept-', '');
-                document.getElementById('dept-title').innerText = target.toUpperCase();
-                document.getElementById('page-dept').classList.add('visible');
-                onValue(ref(db, 'files'), (snap) => {
-                    const cont = document.getElementById('list-files'); cont.innerHTML = "";
-                    const data = snap.val(); if(!data) return;
-                    Object.keys(data).forEach(k => {
-                        const f = data[k];
-                        if(f.dept === target) {
-                            const body = f.type === 'pdf' ? `<a href="${f.attachment}" download="${f.name}.pdf" class="btn">DOWNLOAD PDF</a>` : `<div class="msg-body">${f.content}</div>`;
-                            const canPurge = ["Director", "Deputy Director", "Executive Director", "Supervisor", "Site Manager"].includes(currentSession.r);
-                            const deleteBtn = canPurge ? `<br><br><button class="btn btn-danger" onclick="window.deleteFile('${k}', '${f.name}')">PURGE</button>` : '';
-                            cont.innerHTML += `<div class="card"><h3>${f.name}</h3>${body}${deleteBtn}</div>`;
-                        }
-                    });
-                });
-            } else { const p = document.getElementById('page-'+id); if(p) p.classList.add('visible'); }
-        };
-
-        onValue(ref(db, 'lockdown'), snap => {
-            isLockdown = snap.val() || false;
-            const btn = document.getElementById('lockdown-btn');
-            if(isLockdown) {
-                document.body.classList.add('lockdown-active');
-                if(btn) { btn.innerText = "DISABLE LOCKDOWN"; btn.classList.add('btn-danger'); }
-            } else {
-                document.body.classList.remove('lockdown-active');
-                if(btn) { btn.innerText = "ENABLE LOCKDOWN"; btn.classList.remove('btn-danger'); }
-            }
-        });
-
         onValue(ref(db, 'users'), (snap) => {
             cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
             const isOnline = (ts) => ts && (Date.now() - ts) < 50000;
-            const atlasRow = `<tr><td>${isOnline(masterTS) ? '<div class="online-dot"></div>' : ''}My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>${isOnline(masterTS) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`;
-            const otherRows = cloudUsers.map(u => `<tr><td>${isOnline(u.lastSeen) ? '<div class="online-dot"></div>' : ''}${u.u}</td><td>${u.r}</td><td>${u.d || 'Unassigned'}</td><td>${isOnline(u.lastSeen) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`).join('');
+            const atlasRow = `<tr><td><div class="${isOnline(masterTS)?'online-dot':''}"></div>My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>High Command</td><td>${isOnline(masterTS)?'ACTIVE':'OFFLINE'}</td></tr>`;
+            const otherRows = cloudUsers.map(u => `<tr><td><div class="${isOnline(u.lastSeen)?'online-dot':''}"></div>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d||'Unassigned'}</td><td>${isOnline(u.lastSeen)?'ACTIVE':'OFFLINE'}</td></tr>`).join('');
             document.getElementById('personnel-body').innerHTML = atlasRow + otherRows;
-            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr><td>${u.u} (${u.r})</td><td>${u.d || 'Unassigned'}</td><td><button onclick="window.deleteUser('${u.id}')">REVOKE</button></td></tr>`).join('');
+            
+            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `
+                <tr id="row-${u.id}">
+                    <td>${u.u} (${u.r})</td><td>${u.o||'None'}</td><td>${u.d||'Unassigned'}</td>
+                    <td><button class="btn btn-small" onclick="window.editUserUI('${u.id}', '${u.r}', '${u.d}', '${u.o||'None'}')">EDIT</button></td>
+                </tr>`).join('');
         });
 
-        onValue(ref(db, 'announcement'), (snap) => {
-            const bar = document.getElementById('announcement-bar');
-            const msg = snap.val();
-            if(msg) { bar.innerText = msg; bar.style.display = 'block'; } else { bar.style.display = 'none'; }
-        });
+        window.editUserUI = (id, curR, curD, curO) => {
+            const rSel = rankOptions.map(r => `<option value="${r}" ${r===curR?'selected':''}>${r}</option>`).join('');
+            const dSel = deptOptions.map(d => `<option value="${d}" ${d===curD?'selected':''}>${d}</option>`).join('');
+            const oSel = oversightOptions.map(o => `<option value="${o}" ${o===curO?'selected':''}>${o}</option>`).join('');
+            document.getElementById(`row-${id}`).innerHTML = `<td colspan="4" style="background:#1a1a1a"><select id="e-r-${id}">${rSel}</select> <select id="e-o-${id}">${oSel}</select> <select id="e-d-${id}">${dSel}</select> <button onclick="window.saveEdit('${id}')">SAVE</button></td>`;
+        };
 
+        window.saveEdit = (id) => {
+            update(ref(db, `users/${id}`), { r: document.getElementById(`e-r-${id}`).value, o: document.getElementById(`e-o-${id}`).value, d: document.getElementById(`e-d-${id}`).value });
+            alert("Updated.");
+        };
+
+        window.createUser = () => push(ref(db, `users`), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, o: document.getElementById('new-o').value, d: document.getElementById('new-d').value, lastSeen: 0 });
+
+        window.router = (id) => { document.querySelectorAll('.page').forEach(p => p.classList.remove('visible')); const p = document.getElementById('page-'+id); if(p) p.classList.add('visible'); };
         onValue(ref(db, 'presence/master'), (snap) => { masterTS = snap.val() || 0; });
         onValue(ref(db, 'chat'), (snap) => { document.getElementById('chat-window').innerHTML = Object.values(snap.val() || {}).map(m => `<div class="msg"><small>${m.u}</small><br>${m.m}</div>`).join(''); });
-
-        window.broadcastAnnouncement = () => { const msg = document.getElementById('announcement-in').value; set(ref(db, 'announcement'), msg); };
-        window.clearAnnouncement = () => set(ref(db, 'announcement'), null);
-        window.wipeChat = () => confirm("Wipe global comms?") && set(ref(db, 'chat'), null);
-        window.toggleLockdown = () => set(ref(db, 'lockdown'), !isLockdown);
-
-        window.processSubmission = () => {
-            const name = document.getElementById('f-name').value, dept = document.getElementById('f-dept').value, file = document.getElementById('f-upload').files[0];
-            const logAction = (name) => push(ref(db, 'audit'), { t: new Date().toLocaleString(), u: currentSession.u, a: "CREATE", f: name });
-            if(file) {
-                const reader = new FileReader();
-                reader.onload = () => { push(ref(db, 'files'), { name, dept, type: 'pdf', attachment: reader.result }); logAction(name); alert("Sent."); window.router('dept-'+dept); };
-                reader.readAsDataURL(file);
-            } else {
-                push(ref(db, 'files'), { name, dept, type: 'manual', content: document.getElementById('f-text').value });
-                logAction(name); alert("Saved."); window.router('dept-'+dept);
-            }
-        };
-
         window.sendChat = () => { if(document.getElementById('chat-in').value) { push(ref(db, 'chat'), { u: currentSession.u, m: document.getElementById('chat-in').value }); document.getElementById('chat-in').value = ""; } };
-        window.createUser = () => push(ref(db, `users`), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, lastSeen: 0 });
-        window.deleteUser = (id) => confirm("Revoke access?") && remove(ref(db, `users/${id}`));
-        window.deleteFile = (id, name) => { 
-            if(confirm("Purge file?")) { 
-                remove(ref(db, `files/${id}`)); 
-                push(ref(db, 'audit'), { t: new Date().toLocaleString(), u: currentSession.u, a: "PURGE", f: name });
-            } 
-        };
     </script>
 </body></html>
