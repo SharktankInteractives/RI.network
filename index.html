@@ -139,11 +139,12 @@
                 </select>
                 <label>Assigned Department:</label>
                 <select id="new-d">
-                    <option value="Unassigned">None / High Command</option>
+                    <option value="High Command">High Command</option>
                     <option value="Analysis">Analysis</option>
                     <option value="Internal Affairs">Internal Affairs</option>
                     <option value="Operations">Operations</option>
                     <option value="Public Affairs">Public Affairs</option>
+                    <option value="Unassigned">Unassigned (NA)</option>
                 </select>
                 <button class="btn" onclick="createUser()">AUTHORIZE</button>
             </div>
@@ -172,10 +173,11 @@
 
         window.login = async () => {
             const u = document.getElementById('user-in').value, p = document.getElementById('pass-in').value;
-            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Deputy Director", d: "High Command", id:"master"} : null);
+            // Updated Atlas rank to Site Manager
+            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", d: "High Command", id:"master"} : null);
             
             if(user) {
-                const isDirector = ["Director", "Deputy Director", "Executive Director"].includes(user.r);
+                const isDirector = ["Director", "Deputy Director", "Executive Director", "Site Manager"].includes(user.r);
                 const isSupervisor = user.r === "Supervisor";
                 const lowRanks = ["Senior Agent", "Field Agent", "Junior Agent", "Agent", "Intern"];
 
@@ -234,7 +236,7 @@
                 });
             }
             if(id.startsWith('dept-')) {
-                const target = id.replace('dept-', '').replace('reports', 'reports');
+                const target = id.replace('dept-', '');
                 document.getElementById('dept-title').innerText = target.toUpperCase();
                 document.getElementById('page-dept').classList.add('visible');
                 onValue(ref(db, 'files'), (snap) => {
@@ -244,7 +246,7 @@
                         const f = data[k];
                         if(f.dept === target) {
                             const body = f.type === 'pdf' ? `<a href="${f.attachment}" download="${f.name}.pdf" class="btn">DOWNLOAD PDF</a>` : `<div class="msg-body">${f.content}</div>`;
-                            const canPurge = ["Director", "Deputy Director", "Executive Director", "Supervisor"].includes(currentSession.r);
+                            const canPurge = ["Director", "Deputy Director", "Executive Director", "Supervisor", "Site Manager"].includes(currentSession.r);
                             const deleteBtn = canPurge ? `<br><br><button class="btn btn-danger" onclick="window.deleteFile('${k}', '${f.name}')">PURGE</button>` : '';
                             cont.innerHTML += `<div class="card"><h3>${f.name}</h3>${body}${deleteBtn}</div>`;
                         }
@@ -268,10 +270,10 @@
         onValue(ref(db, 'users'), (snap) => {
             cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
             const isOnline = (ts) => ts && (Date.now() - ts) < 50000;
-            const atlasRow = `<tr><td>${isOnline(masterTS) ? '<div class="online-dot"></div>' : ''}My_AtlasX</td><td>Deputy Director</td><td>High Command</td><td>${isOnline(masterTS) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`;
-            const otherRows = cloudUsers.map(u => `<tr><td>${isOnline(u.lastSeen) ? '<div class="online-dot"></div>' : ''}${u.u}</td><td>${u.r}</td><td>${u.d || 'N/A'}</td><td>${isOnline(u.lastSeen) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`).join('');
+            const atlasRow = `<tr><td>${isOnline(masterTS) ? '<div class="online-dot"></div>' : ''}My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>${isOnline(masterTS) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`;
+            const otherRows = cloudUsers.map(u => `<tr><td>${isOnline(u.lastSeen) ? '<div class="online-dot"></div>' : ''}${u.u}</td><td>${u.r}</td><td>${u.d || 'Unassigned'}</td><td>${isOnline(u.lastSeen) ? 'ACTIVE' : 'OFFLINE'}</td></tr>`).join('');
             document.getElementById('personnel-body').innerHTML = atlasRow + otherRows;
-            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr><td>${u.u} (${u.r})</td><td>${u.d || 'None'}</td><td><button onclick="window.deleteUser('${u.id}')">REVOKE</button></td></tr>`).join('');
+            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr><td>${u.u} (${u.r})</td><td>${u.d || 'Unassigned'}</td><td><button onclick="window.deleteUser('${u.id}')">REVOKE</button></td></tr>`).join('');
         });
 
         onValue(ref(db, 'announcement'), (snap) => {
