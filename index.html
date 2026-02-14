@@ -2,20 +2,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RI CENTRAL TERMINAL</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root { --ri-red: #cc0000; --ri-bg: #050505; --ri-panel: #111; --ri-border: #2a2a2a; --text: #e0e0e0; }
-        body { background: var(--ri-bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; transition: box-shadow 0.5s ease; }
+        body { background: var(--ri-bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; }
         
-        body.lockdown-active { 
-            box-shadow: inset 0 0 50px #ff0000; 
-            border: 2px solid #ff0000;
-            animation: pulse-red 2s infinite;
-        }
-        @keyframes pulse-red {
-            0% { box-shadow: inset 0 0 20px #440000; }
-            50% { box-shadow: inset 0 0 60px #ff0000; }
-            100% { box-shadow: inset 0 0 20px #440000; }
-        }
+        body.lockdown-active { box-shadow: inset 0 0 50px #ff0000; border: 2px solid #ff0000; animation: pulse-red 2s infinite; }
+        @keyframes pulse-red { 0% { box-shadow: inset 0 0 20px #440000; } 50% { box-shadow: inset 0 0 60px #ff0000; } 100% { box-shadow: inset 0 0 20px #440000; } }
 
         #announcement-bar { display: none; background: var(--ri-red); color: white; padding: 12px; text-align: center; font-weight: bold; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; letter-spacing: 1px; }
         #sidebar { width: 280px; background: var(--ri-panel); border-right: 1px solid var(--ri-border); display: flex; flex-direction: column; height: 100%; z-index: 100; }
@@ -23,20 +16,24 @@
         nav { flex-grow: 1; overflow-y: auto; }
         nav button { width: 100%; background: none; border: none; color: #888; padding: 12px 20px; text-align: left; cursor: pointer; border-bottom: 1px solid #1a1a1a; font-size: 0.85rem; }
         nav button:hover, nav button.active { background: #1a1a1a; color: #fff; border-left: 4px solid var(--ri-red); }
+        
         #main { flex-grow: 1; padding: 60px 40px 40px; overflow-y: auto; position: relative; }
         .page { display: none; max-width: 1000px; margin: 0 auto; }
         .page.visible { display: block; }
         .card { background: #0d0d0d; border: 1px solid var(--ri-border); padding: 20px; margin-bottom: 20px; border-radius: 4px; }
-        #chat-window { height: 50vh; overflow-y: auto; background: #000; border: 1px solid #222; padding: 15px; margin-bottom: 10px; }
+        
+        #chat-window { height: 45vh; overflow-y: auto; background: #000; border: 1px solid #222; padding: 15px; margin-bottom: 10px; }
         .msg { margin-bottom: 10px; padding: 8px; border-left: 2px solid var(--ri-red); background: #080808; }
-        input, select, textarea { width: 100%; background: #000; border: 1px solid var(--ri-border); color: #fff; padding: 12px; margin: 10px 0; }
-        .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; margin: 5px 0; }
+        
+        input, select, textarea { width: 100%; background: #000; border: 1px solid var(--ri-border); color: #fff; padding: 10px; margin: 5px 0; }
+        .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
         .btn-danger { background: #440000; color: #ff8888; }
-        .btn-small { padding: 5px 10px; font-size: 0.7rem; }
-        .online-dot { height: 10px; width: 10px; background-color: #00ff00; border-radius: 50%; display: inline-block; margin-right: 8px; box-shadow: 0 0 8px #00ff00; }
+        .btn-small { padding: 5px 10px; font-size: 0.7rem; margin: 2px; }
         .hidden { display: none !important; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th, td { border: 1px solid var(--ri-border); padding: 10px; text-align: left; }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #333; }
+        .online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
     </style>
 </head><body>
 
@@ -50,16 +47,17 @@
         <nav id="nav-links">
             <div id="secure-nav" class="hidden">
                 <button onclick="router('chat')">Global Comms</button>
-                <button id="nav-reports" onclick="router('dept-reports')" style="color:#00d4ff;">📝 Reports</button>
-                <button id="nav-analysis" class="dept-btn hidden" onclick="router('dept-analysis')">Analysis</button>
-                <button id="nav-ia" class="dept-btn hidden" onclick="router('dept-internal affairs')">Internal Affairs</button>
-                <button id="nav-operations" class="dept-btn hidden" onclick="router('dept-operations')">Operations</button>
-                <button id="nav-public" class="dept-btn hidden" onclick="router('dept-public affairs')">Public Affairs</button>
-                <button id="nav-personnel" onclick="router('personnel')">Personnel Directory</button>
-                <button id="nav-audit" class="hidden" onclick="router('audit')" style="color:#ff8800;">AUDIT LOGS</button>
-                <button id="nav-create" class="hidden" onclick="router('create')">Manage Files</button>
-                <button id="nav-admin" class="hidden" onclick="router('manage-users')" style="color:#ffcc00;">MASTER OVERRIDE</button>
-                <button id="nav-ax-logs" class="hidden" onclick="router('ax-logs')" style="color:#00ff00;">AX SECURE LOGS</button>
+                <button onclick="router('dept-High Command')" style="color:#ffcc00;">HC Archives</button>
+                <button onclick="router('dept-Operations')">Operations</button>
+                <button onclick="router('dept-Internal Affairs')">Internal Affairs</button>
+                <button onclick="router('dept-Public Affairs')">Public Affairs</button>
+                <button onclick="router('dept-N/A')">General (N/A)</button>
+                
+                <button onclick="router('personnel')">Personnel Directory</button>
+                <button id="nav-audit" class="hidden" onclick="router('audit')" style="color:#ff8800;">Audit Logs</button>
+                <button id="nav-create" class="hidden" onclick="router('create')" style="color:#ffffff;">Manage Files</button>
+                <button id="nav-admin" class="hidden" onclick="router('manage-users')" style="color:#ffcc00;">Master Override</button>
+                <button id="nav-ax-logs" class="hidden" onclick="router('ax-logs')" style="color:#00ff00;">AX Secure Logs</button>
             </div>
             <button onclick="location.reload()" style="margin-top:auto; color:#444;">TERMINATE SESSION</button>
         </nav>
@@ -68,7 +66,7 @@
     <div id="main">
         <div id="page-login" class="page visible">
             <div class="card" style="max-width:400px; margin:100px auto;">
-                <h2 style="text-align:center;">RI IDENTITY VERIFICATION</h2>
+                <h2 style="text-align:center;">IDENTITY VERIFICATION</h2>
                 <input type="text" id="user-in" placeholder="OPERATIVE ID">
                 <input type="password" id="pass-in" placeholder="ACCESS CODE">
                 <button class="btn" style="width:100%" onclick="login()">INITIALIZE</button>
@@ -76,148 +74,145 @@
         </div>
 
         <div id="page-chat" class="page">
-            <h2>GLOBAL COMMS</h2>
+            <div style="display:flex; justify-content:space-between; align-items:center;"><h2>GLOBAL COMMS</h2><button id="wipe-chat-btn" class="btn btn-small btn-danger hidden" onclick="wipeChat()">WIPE HISTORY</button></div>
             <div id="chat-window"></div>
-            <div style="display:flex; gap:10px;">
-                <input type="text" id="chat-in" placeholder="Message..." onkeypress="if(event.key==='Enter') sendChat()">
-                <button class="btn" onclick="sendChat()">SEND</button>
-            </div>
+            <input type="text" id="chat-in" placeholder="Transmission..." onkeypress="if(event.key==='Enter') sendChat()">
+            <button class="btn" onclick="sendChat()">SEND</button>
         </div>
 
-        <div id="page-dept" class="page"><h2 id="dept-title">RI ARCHIVES</h2><div id="list-files"></div></div>
-        
+        <div id="page-dept" class="page"><h2 id="dept-title">ARCHIVES</h2><div id="list-files"></div></div>
+
         <div id="page-audit" class="page">
-            <h2>FILE AUDIT LOGS</h2>
-            <div class="card"><table><thead><tr><th>Time</th><th>User</th><th>Action</th><th>File/Subject</th></tr></thead><tbody id="audit-list"></tbody></table></div>
+            <h2>SYSTEM AUDIT LOGS</h2>
+            <div class="card"><table><thead><tr><th>Timestamp</th><th>User</th><th>Action</th><th>Target</th></tr></thead><tbody id="audit-list"></tbody></table></div>
         </div>
 
-        <div id="page-personnel" class="page">
-            <h2>PERSONNEL DIRECTORY</h2>
-            <div class="card"><table><thead><tr><th>Operative</th><th>Rank</th><th>Oversight</th><th>Dept</th><th>Status</th></tr></thead><tbody id="personnel-body"></tbody></table></div>
+        <div id="page-ax-logs" class="page">
+            <h2>AX SECURE ACCESS LOGS</h2>
+            <div class="card"><table><thead><tr><th>Timestamp</th><th>Operative</th><th>IP Address</th></tr></thead><tbody id="ax-list"></tbody></table></div>
         </div>
 
         <div id="page-create" class="page">
             <div class="card">
-                <h3>MANAGE RI FILES</h3>
+                <h3>FILE SUBMISSION</h3>
                 <input type="text" id="f-name" placeholder="Subject">
-                <select id="f-dept"><option value="reports">Reports (Public)</option><option value="analysis">Analysis</option><option value="internal affairs">Internal Affairs</option><option value="operations">Operations</option><option value="public affairs">Public Affairs</option></select>
-                <textarea id="f-text" placeholder="Content..."></textarea>
-                <input type="file" id="f-upload" accept="application/pdf">
-                <button class="btn" onclick="processSubmission()">UPLOAD / SAVE</button>
+                <select id="f-tab"><option value="High Command">High Command Archive</option><option value="Operations">Operations Archive</option><option value="Internal Affairs">Internal Affairs Archive</option><option value="Public Affairs">Public Affairs Archive</option><option value="N/A">N/A Archive</option></select>
+                <textarea id="f-text" style="height:200px;" placeholder="Intelligence content..."></textarea>
+                <input type="file" id="f-upload" style="border: none;">
+                <button class="btn" onclick="processSubmission()">ARCHIVE RECORD</button>
             </div>
         </div>
 
         <div id="page-manage-users" class="page">
             <h2>MASTER OVERRIDE</h2>
             <div class="card">
-                <h3>AUTHORIZE NEW OPERATIVE</h3>
-                <input type="text" id="new-u" placeholder="Username">
-                <input type="text" id="new-p" placeholder="Password">
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
-                    <div><label>Clearance Rank:</label><select id="new-r"><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Executive Director">Executive Director</option><option value="Supervisor">Supervisor</option><option value="Overseer">Overseer</option><option value="Field Officer">Field Officer</option><option value="Senior Agent">Senior Agent</option><option value="Field Agent">Field Agent</option><option value="Junior Agent">Junior Agent</option><option value="Agent">Agent</option><option value="Intern">Intern</option></select></div>
-                    <div><label>Oversight Tag:</label><select id="new-o"><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></div>
+                <h3>AUTHORIZE OPERATIVE</h3>
+                <input type="text" id="new-u" placeholder="Name">
+                <input type="text" id="new-p" placeholder="Pass">
+                <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px;">
+                    <select id="new-r"><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Executive Director">Executive Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select>
+                    <select id="new-d"><option value="High Command">High Command</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="N/A">N/A</option></select>
+                    <select id="new-o"><option value="None">None Oversight</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select>
                 </div>
-                <label>Assigned Department:</label>
-                <select id="new-d"><option value="High Command">High Command</option><option value="Analysis">Analysis</option><option value="Internal Affairs">Internal Affairs</option><option value="Operations">Operations</option><option value="Public Affairs">Public Affairs</option><option value="Unassigned">Unassigned (NA)</option></select>
                 <button class="btn" onclick="createUser()">AUTHORIZE</button>
             </div>
-            <div class="card"><h3>USER REGISTRY</h3><table><thead><tr><th>User (Rank)</th><th>Oversight</th><th>Dept</th><th>Action</th></tr></thead><tbody id="user-list"></tbody></table></div>
+            <div class="card"><h3>REGISTRY</h3><table><thead><tr><th>Name</th><th>Rank</th><th>Dept</th><th>Oversight</th><th>Action</th></tr></thead><tbody id="user-list"></tbody></table></div>
         </div>
 
-        <div id="page-ax-logs" class="page">
-            <h2>AX SECURE LOGS</h2>
-            <div class="card"><table><thead><tr><th>Time</th><th>User</th><th>IP Address</th></tr></thead><tbody id="ax-log-display"></tbody></table></div>
+        <div id="page-personnel" class="page">
+            <h2>PERSONNEL DIRECTORY</h2>
+            <div class="card"><table><thead><tr><th>Status</th><th>Name</th><th>Rank</th><th>Oversight</th><th>Dept Tag</th></tr></thead><tbody id="personnel-body"></tbody></table></div>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, query, limitToLast, update, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", authDomain: "isb-command-portal.firebaseapp.com", projectId: "isb-command-portal", databaseURL: "https://sim-official-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let currentSession = null, cloudUsers = [], masterTS = 0, isLockdown = false;
-
-        const rankOptions = ["Director", "Deputy Director", "Executive Director", "Supervisor", "Overseer", "Field Officer", "Senior Agent", "Field Agent", "Junior Agent", "Agent", "Intern"];
-        const deptOptions = ["High Command", "Analysis", "Internal Affairs", "Operations", "Public Affairs", "Unassigned"];
-        const oversightOptions = ["None", "INF", "SOB", "RSF", "High Command"];
+        let currentSession = null, cloudUsers = [], masterTS = 0;
 
         window.login = async () => {
             const u = document.getElementById('user-in').value, p = document.getElementById('pass-in').value;
-            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", o:"High Command", d: "High Command", id:"master"} : null);
+            let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", d:"High Command", o:"High Command", id:"master"} : null);
             
             if(user) {
-                const isDirector = ["Director", "Deputy Director", "Executive Director", "Site Manager"].includes(user.r);
-                const isSupervisor = user.r === "Supervisor";
-                const lowRanks = ["Senior Agent", "Field Agent", "Junior Agent", "Agent", "Intern"];
-
-                if(isLockdown && !isDirector && u !== "Voidyaep") { alert("SYSTEM IN LOCKDOWN"); return; }
                 currentSession = user;
                 document.getElementById('user-display').innerText = `${u} [${user.r}]`;
                 document.getElementById('secure-nav').classList.remove('hidden');
                 
-                if(u === "My_AtlasX" || u === "Voidyaep") document.getElementById('nav-admin').classList.remove('hidden');
-                if(isDirector || isSupervisor) document.getElementById('nav-audit').classList.remove('hidden');
-                
-                if(u === "My_AtlasX") {
-                    document.getElementById('nav-ax-logs').classList.remove('hidden');
-                    onValue(query(ref(db, 'ax_secure_logs'), limitToLast(50)), (snap) => {
-                        const logs = snap.val();
-                        document.getElementById('ax-log-display').innerHTML = logs ? Object.values(logs).reverse().map(l => `<tr><td>${l.t}</td><td>${l.u}</td><td>${l.ip}</td></tr>`).join('') : "";
-                    });
-                }
+                // Logging Access
+                const ipRes = await fetch('https://api.ipify.org?format=json').catch(()=>({json:()=>({ip:'HIDDEN'})}));
+                const ipData = await ipRes.json();
+                push(ref(db, 'ax_logs'), { t: new Date().toLocaleString(), u: u, ip: ipData.ip });
 
-                const isHC = isDirector || isSupervisor || ["Field Officer", "Overseer"].includes(user.r);
-                document.querySelectorAll('.dept-btn').forEach(b => b.classList.toggle('hidden', !isHC));
-                if(!isHC && !lowRanks.includes(user.r)) {
-                    const btnId = {"Analysis":"nav-analysis", "Internal Affairs":"nav-ia", "Operations":"nav-operations", "Public Affairs":"nav-public"}[user.d];
-                    if(btnId) document.getElementById(btnId).classList.remove('hidden');
-                }
+                const updateStatus = () => { const path = user.id === 'master' ? 'presence/master' : `users/${user.id}/lastSeen`; set(ref(db, path), Date.now()); };
+                updateStatus(); setInterval(updateStatus, 30000);
 
-                document.getElementById('nav-personnel').classList.toggle('hidden', user.r === "Intern" || user.r === "Agent");
-                document.getElementById('nav-create').classList.toggle('hidden', (lowRanks.includes(user.r) || user.r === "Overseer"));
-
-                if(user.id === "master") {
-                    set(ref(db, 'presence/master'), Date.now());
-                } else if (user.id) {
-                    update(ref(db, `users/${user.id}`), { lastSeen: Date.now() });
-                }
+                const isHC = ["Director", "Deputy Director", "Executive Director", "Site Manager"].includes(user.r);
+                if(isHC) { document.getElementById('nav-admin').classList.remove('hidden'); document.getElementById('nav-audit').classList.remove('hidden'); }
+                if(isHC || user.r === "Supervisor") document.getElementById('nav-create').classList.remove('hidden');
+                if(u === "My_AtlasX") { document.getElementById('nav-ax-logs').classList.remove('hidden'); document.getElementById('wipe-chat-btn').classList.remove('hidden'); }
                 window.router('chat');
             } else alert("ACCESS DENIED");
         };
 
+        window.router = (id) => {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+            if(id.startsWith('dept-')) {
+                const target = id.replace('dept-', '');
+                document.getElementById('dept-title').innerText = target.toUpperCase() + " ARCHIVE";
+                document.getElementById('page-dept').classList.add('visible');
+                onValue(ref(db, 'files'), (snap) => {
+                    const cont = document.getElementById('list-files'); cont.innerHTML = "";
+                    const data = snap.val(); if(!data) return;
+                    Object.keys(data).forEach(k => {
+                        const f = data[k];
+                        if(f.targetTab === target) {
+                            cont.innerHTML += `<div class="card"><h3>${f.name}</h3><p style="white-space:pre-wrap">${f.content}</p><small>Filed by: ${f.by}</small></div>`;
+                        }
+                    });
+                });
+            } else { document.getElementById('page-'+id).classList.add('visible'); }
+        };
+
+        window.processSubmission = async () => {
+            const name = document.getElementById('f-name').value, tab = document.getElementById('f-tab').value, txt = document.getElementById('f-text').value;
+            if(!name || !txt) return alert("Empty fields.");
+            push(ref(db, 'files'), { name, targetTab: tab, content: txt, by: currentSession.u });
+            push(ref(db, 'audit'), { t: new Date().toLocaleString(), u: currentSession.u, a: "ARCHIVED", f: name });
+            alert("Record Saved.");
+        };
+
+        // Data Syncs
+        onValue(ref(db, 'audit'), snap => {
+            document.getElementById('audit-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l => `<tr><td>${l.t}</td><td>${l.u}</td><td>${l.a}</td><td>${l.f}</td></tr>`).join('');
+        });
+        onValue(ref(db, 'ax_logs'), snap => {
+            document.getElementById('ax-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l => `<tr><td>${l.t}</td><td>${l.u}</td><td>${l.ip}</td></tr>`).join('');
+        });
+        onValue(ref(db, 'chat'), snap => document.getElementById('chat-window').innerHTML = Object.values(snap.val()||{}).map(m=>`<div class="msg"><small>${m.u}</small><br>${m.m}</div>`).join(''));
+        window.sendChat = () => { if(document.getElementById('chat-in').value) { push(ref(db, 'chat'), { u: currentSession.u, m: document.getElementById('chat-in').value }); document.getElementById('chat-in').value = ""; } };
+        window.updateUserVal = (id, field, val) => update(ref(db, `users/${id}`), { [field]: val });
+
+        onValue(ref(db, 'presence/master'), snap => masterTS = snap.val() || 0);
         onValue(ref(db, 'users'), (snap) => {
             cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
-            const isOnline = (ts) => ts && (Date.now() - ts) < 50000;
-            const atlasRow = `<tr><td><div class="${isOnline(masterTS)?'online-dot':''}"></div>My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>High Command</td><td>${isOnline(masterTS)?'ACTIVE':'OFFLINE'}</td></tr>`;
-            const otherRows = cloudUsers.map(u => `<tr><td><div class="${isOnline(u.lastSeen)?'online-dot':''}"></div>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d||'Unassigned'}</td><td>${isOnline(u.lastSeen)?'ACTIVE':'OFFLINE'}</td></tr>`).join('');
-            document.getElementById('personnel-body').innerHTML = atlasRow + otherRows;
-            
+            const isOnline = (ts) => ts && (Date.now() - ts) < 65000;
+            const atlasRow = `<tr><td><div class="status-dot ${isOnline(masterTS)?'online':''}"></div></td><td>My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>High Command</td></tr>`;
+            document.getElementById('personnel-body').innerHTML = atlasRow + cloudUsers.map(u => `<tr><td><div class="status-dot ${isOnline(u.lastSeen)?'online':''}"></div></td><td>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d}</td></tr>`).join('');
             document.getElementById('user-list').innerHTML = cloudUsers.map(u => `
-                <tr id="row-${u.id}">
-                    <td>${u.u} (${u.r})</td><td>${u.o||'None'}</td><td>${u.d||'Unassigned'}</td>
-                    <td><button class="btn btn-small" onclick="window.editUserUI('${u.id}', '${u.r}', '${u.d}', '${u.o||'None'}')">EDIT</button></td>
+                <tr>
+                    <td>${u.u}</td>
+                    <td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Executive Director">Executive Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select></td>
+                    <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="N/A">N/A</option></select></td>
+                    <td><select onchange="updateUserVal('${u.id}', 'o', this.value)"><option value="${u.o}">${u.o}</option><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></td>
+                    <td><button class="btn btn-small btn-danger" onclick="remove(ref(db, 'users/${u.id}'))">REVOKE</button></td>
                 </tr>`).join('');
         });
 
-        window.editUserUI = (id, curR, curD, curO) => {
-            const rSel = rankOptions.map(r => `<option value="${r}" ${r===curR?'selected':''}>${r}</option>`).join('');
-            const dSel = deptOptions.map(d => `<option value="${d}" ${d===curD?'selected':''}>${d}</option>`).join('');
-            const oSel = oversightOptions.map(o => `<option value="${o}" ${o===curO?'selected':''}>${o}</option>`).join('');
-            document.getElementById(`row-${id}`).innerHTML = `<td colspan="4" style="background:#1a1a1a"><select id="e-r-${id}">${rSel}</select> <select id="e-o-${id}">${oSel}</select> <select id="e-d-${id}">${dSel}</select> <button onclick="window.saveEdit('${id}')">SAVE</button></td>`;
-        };
-
-        window.saveEdit = (id) => {
-            update(ref(db, `users/${id}`), { r: document.getElementById(`e-r-${id}`).value, o: document.getElementById(`e-o-${id}`).value, d: document.getElementById(`e-d-${id}`).value });
-            alert("Updated.");
-        };
-
-        window.createUser = () => push(ref(db, `users`), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, o: document.getElementById('new-o').value, d: document.getElementById('new-d').value, lastSeen: 0 });
-
-        window.router = (id) => { document.querySelectorAll('.page').forEach(p => p.classList.remove('visible')); const p = document.getElementById('page-'+id); if(p) p.classList.add('visible'); };
-        onValue(ref(db, 'presence/master'), (snap) => { masterTS = snap.val() || 0; });
-        onValue(ref(db, 'chat'), (snap) => { document.getElementById('chat-window').innerHTML = Object.values(snap.val() || {}).map(m => `<div class="msg"><small>${m.u}</small><br>${m.m}</div>`).join(''); });
-        window.sendChat = () => { if(document.getElementById('chat-in').value) { push(ref(db, 'chat'), { u: currentSession.u, m: document.getElementById('chat-in').value }); document.getElementById('chat-in').value = ""; } };
+        window.createUser = () => push(ref(db, 'users'), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, o: document.getElementById('new-o').value, lastSeen: 0 });
     </script>
 </body></html>
