@@ -129,7 +129,7 @@
                 <button onclick="router('dept-High Command')" style="color:#ffcc00;">HC Archives</button>
                 <button onclick="router('dept-Academy')" style="color:#00ccff;">Academy</button>
                 <button onclick="router('dept-Operations')">Operations</button>
-                <button onclick="router('dept-Internal Affairs')">Internal Affairs</button>
+                <button onclick="router('dept-Documents')">Documents</button>
                 <button onclick="router('dept-Public Affairs')">Public Affairs</button>
                 <button onclick="router('dept-Reports')">Reports</button>
                 <button onclick="router('personnel')">Personnel Directory</button>
@@ -187,7 +187,7 @@
             <div class="card">
                 <h3>ARCHIVE SUBMISSION</h3>
                 <input type="text" id="f-name" placeholder="Subject">
-                <select id="f-tab"><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select>
+                <select id="f-tab"><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Documents">Documents</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select>
                 <textarea id="f-text" style="height:250px;" placeholder="Dossier content..."></textarea>
                 <input type="file" id="f-upload">
                 <button class="btn" style="width:100%; margin-top:10px;" onclick="processSubmission()">FILE RECORD</button>
@@ -287,7 +287,7 @@
             document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr>
                 <td>${u.u}</td>
                 <td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select></td>
-                <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select></td>
+                <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Documents">Documents</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select></td>
                 <td><select onchange="updateUserVal('${u.id}', 'o', this.value)"><option value="${u.o}">${u.o}</option><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></td>
                 <td><button onclick="remove(ref(db, 'users/${u.id}'))">REVOKE</button></td>
             </tr>`).join('');
