@@ -25,22 +25,22 @@
         .page.visible { display: block; }
         .card { background: #0d0d0d; border: 1px solid var(--ri-border); padding: 20px; margin-bottom: 20px; border-radius: 4px; position: relative; }
         
-        /* Dossier Archive Styles */
         .dossier { background: #111; border: 1px solid #333; border-left: 5px solid var(--ri-red); margin-bottom: 30px; position: relative; }
         .dossier-header { background: #1a1a1a; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
         .dossier-body { padding: 20px; color: #ccc; line-height: 1.6; white-space: pre-wrap; font-family: 'Consolas', monospace; }
         .dossier-footer { padding: 10px 20px; background: #0a0a0a; border-top: 1px solid #222; font-size: 0.75rem; color: #666; display: flex; justify-content: space-between; }
 
-        /* Chat Styles */
         #chat-window { height: 450px; background: #080808; border: 1px solid #222; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
         .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; }
         .msg-left { align-self: flex-start; background: #222; }
         .msg-right { align-self: flex-end; background: var(--ri-red); }
         .msg-info { font-size: 0.65rem; margin-bottom: 4px; opacity: 0.7; font-weight: bold; }
 
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #333; }
+        .online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+
         input, select, textarea { width: 100%; background: #000; border: 1px solid var(--ri-border); color: #fff; padding: 10px; margin: 5px 0; }
         .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
-        .delete-btn { color: #444; cursor: pointer; font-family: monospace; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { border: 1px solid var(--ri-border); padding: 10px; text-align: left; }
         .hidden { display: none !important; }
@@ -86,14 +86,6 @@
 
         <div id="page-manage-users" class="page">
             <h2>MASTER OVERRIDE</h2>
-            <div class="card" style="border: 2px solid var(--ri-red);">
-                <h3>SYSTEM BROADCAST / LOCKDOWN</h3>
-                <input type="text" id="ann-in" placeholder="Emergency message...">
-                <button class="btn" onclick="postAnn()">POST BROADCAST</button>
-                <button class="btn" style="background:#333" onclick="set(ref(db, 'announcement'), '')">CLEAR</button>
-                <button class="btn" style="width:100%; margin-top:10px;" onclick="toggleLockdown()">TOGGLE LOCKDOWN</button>
-            </div>
-
             <div class="card">
                 <h3>AUTHORIZE OPERATIVE</h3>
                 <input type="text" id="new-u" placeholder="Name">
@@ -105,9 +97,7 @@
                 </div>
                 <button class="btn" style="width:100%; margin-top:10px;" onclick="createUser()">AUTHORIZE</button>
             </div>
-
             <div class="card">
-                <h3>OPERATIVE REGISTRY</h3>
                 <table><thead><tr><th>User</th><th>Rank</th><th>Dept</th><th>Oversight</th><th>Action</th></tr></thead><tbody id="user-list"></tbody></table>
             </div>
         </div>
@@ -129,7 +119,14 @@
         </div>
 
         <div id="page-dept" class="page"><h2 id="dept-title">ARCHIVE</h2><div id="list-files"></div></div>
-        <div id="page-personnel" class="page"><h2>PERSONNEL</h2><div class="card"><table><thead><tr><th>User</th><th>Rank</th><th>Oversight</th><th>Dept</th></tr></thead><tbody id="personnel-body"></tbody></table></div></div>
+        
+        <div id="page-personnel" class="page">
+            <h2>PERSONNEL DIRECTORY</h2>
+            <div class="card">
+                <table><thead><tr><th>Status</th><th>User</th><th>Rank</th><th>Oversight</th><th>Dept</th></tr></thead><tbody id="personnel-body"></tbody></table>
+            </div>
+        </div>
+
         <div id="page-audit" class="page"><h2>AUDIT LOGS</h2><div class="card"><table><tbody id="audit-list"></tbody></table></div></div>
         
         <div id="page-chat" class="page">
@@ -149,7 +146,7 @@
         const firebaseConfig = { apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", authDomain: "isb-command-portal.firebaseapp.com", projectId: "isb-command-portal", databaseURL: "https://sim-official-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let currentSession = null, cloudUsers = [];
+        let currentSession = null, cloudUsers = [], masterTS = 0;
 
         const AUTH_LEVELS = ["Director", "Deputy Director", "Executive Director", "Site Manager", "Supervisor"];
 
@@ -172,6 +169,10 @@
                 if(u === "My_AtlasX") document.getElementById('nav-ax-logs').classList.remove('hidden');
                 
                 window.router('chat');
+
+                // Presence Logic
+                const path = user.id === 'master' ? 'presence/master' : `users/${user.id}/lastSeen`;
+                setInterval(() => set(ref(db, path), Date.now()), 30000);
             } else alert("INVALID CREDENTIALS");
         };
 
@@ -198,9 +199,15 @@
 
         window.updateUserVal = (id, field, val) => update(ref(db, `users/${id}`), { [field]: val });
 
+        onValue(ref(db, 'presence/master'), snap => masterTS = snap.val() || 0);
+
         onValue(ref(db, 'users'), (snap) => {
             cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
-            document.getElementById('personnel-body').innerHTML = cloudUsers.map(u => `<tr><td>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d}</td></tr>`).join('');
+            const isOnline = (ts) => ts && (Date.now() - ts) < 65000;
+            
+            const atlasRow = `<tr><td><div class="status-dot ${isOnline(masterTS)?'online':''}"></div></td><td>My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>High Command</td></tr>`;
+            document.getElementById('personnel-body').innerHTML = atlasRow + cloudUsers.map(u => `<tr><td><div class="status-dot ${isOnline(u.lastSeen)?'online':''}"></div></td><td>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d}</td></tr>`).join('');
+            
             document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr>
                 <td>${u.u}</td>
                 <td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select></td>
@@ -236,6 +243,6 @@
         window.sendChat = () => { const inp = document.getElementById('chat-in'); if(inp.value) { push(ref(db, 'chat'), { u: currentSession.u, m: inp.value }); inp.value = ""; } };
         onValue(ref(db, 'ax_logs'), snap => document.getElementById('ax-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l=>`<tr><td>${l.t}</td><td>${l.u}</td><td>${l.ip}</td></tr>`).join(''));
         onValue(ref(db, 'audit'), snap => document.getElementById('audit-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l=>`<tr><td>${l.t}</td><td>${l.u}</td><td>${l.a}</td><td>${l.f}</td></tr>`).join(''));
-        window.createUser = () => push(ref(db, 'users'), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, o: document.getElementById('new-o').value });
+        window.createUser = () => push(ref(db, 'users'), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, o: document.getElementById('new-o').value, lastSeen: 0 });
     </script>
 </body></html>
