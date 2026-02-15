@@ -7,14 +7,11 @@
         :root { --ri-red: #cc0000; --ri-bg: #050505; --ri-panel: #111; --ri-border: #2a2a2a; --text: #e0e0e0; }
         body { background: var(--ri-bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; display: flex; height: 100vh; overflow: hidden; transition: 0.5s; }
         
-        /* LOCKDOWN VISUALS */
         body.lockdown-active { box-shadow: inset 0 0 100px #ff0000; border: 4px solid #ff0000; animation: pulse-red 1.5s infinite; }
         @keyframes pulse-red { 0% { box-shadow: inset 0 0 40px #660000; } 50% { box-shadow: inset 0 0 120px #ff0000; } 100% { box-shadow: inset 0 0 40px #660000; } }
 
-        /* BARS */
-        #announcement-bar { display: none; background: rgba(204, 0, 0, 0.75); backdrop-filter: blur(4px); color: white; padding: 15px; text-align: center; font-weight: bold; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.2); animation: pulse-opacity 3s infinite; }
+        #announcement-bar { display: none; background: rgba(204, 0, 0, 0.75); backdrop-filter: blur(4px); color: white; padding: 15px; text-align: center; font-weight: bold; z-index: 10000; position: fixed; top: 0; left: 0; width: 100%; letter-spacing: 2px; border-bottom: 1px solid rgba(255,255,255,0.2); }
         #lockdown-bar { display: none; background: rgba(0, 0, 0, 0.85); color: #ff0000; padding: 15px; text-align: center; font-weight: 900; z-index: 10001; position: fixed; top: 0; left: 0; width: 100%; letter-spacing: 8px; border-bottom: 3px solid #ff0000; animation: rapid-flash 0.8s infinite; }
-        @keyframes pulse-opacity { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
         @keyframes rapid-flash { 0%, 100% { background: rgba(0, 0, 0, 0.85); color: #ff0000; } 50% { background: rgba(180, 0, 0, 0.95); color: #fff; } }
 
         #sidebar { width: 280px; background: var(--ri-panel); border-right: 1px solid var(--ri-border); display: flex; flex-direction: column; height: 100%; z-index: 100; }
@@ -28,30 +25,27 @@
         .page.visible { display: block; }
         .card { background: #0d0d0d; border: 1px solid var(--ri-border); padding: 20px; margin-bottom: 20px; border-radius: 4px; position: relative; }
         
-        .dossier { background: #111; border: 1px solid #333; border-left: 5px solid var(--ri-red); margin-bottom: 30px; position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+        /* Dossier Archive Styles */
+        .dossier { background: #111; border: 1px solid #333; border-left: 5px solid var(--ri-red); margin-bottom: 30px; position: relative; }
         .dossier-header { background: #1a1a1a; padding: 10px 20px; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; }
-        .dossier-body { padding: 20px; color: #ccc; line-height: 1.6; white-space: pre-wrap; font-family: 'Consolas', monospace; font-size: 0.9rem; }
+        .dossier-body { padding: 20px; color: #ccc; line-height: 1.6; white-space: pre-wrap; font-family: 'Consolas', monospace; }
         .dossier-footer { padding: 10px 20px; background: #0a0a0a; border-top: 1px solid #222; font-size: 0.75rem; color: #666; display: flex; justify-content: space-between; }
 
+        /* Chat Styles */
         #chat-window { height: 450px; background: #080808; border: 1px solid #222; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; position: relative; font-size: 0.9rem; line-height: 1.4; }
-        .msg-left { align-self: flex-start; background: #222; color: #fff; border-bottom-left-radius: 2px; }
-        .msg-right { align-self: flex-end; background: var(--ri-red); color: #fff; border-bottom-right-radius: 2px; }
-        .msg-info { font-size: 0.65rem; margin-bottom: 4px; opacity: 0.7; font-weight: bold; text-transform: uppercase; }
-        .chat-controls { display: flex; gap: 10px; background: #111; padding: 10px; border: 1px solid #222; border-top: none; }
-
-        .delete-btn { color: #444; cursor: pointer; font-family: monospace; font-weight: bold; }
-        .delete-btn:hover { color: var(--ri-red); }
-        .confirm-del { background: var(--ri-red); color: white; padding: 2px 8px; font-size: 0.7rem; }
+        .msg { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.9rem; }
+        .msg-left { align-self: flex-start; background: #222; }
+        .msg-right { align-self: flex-end; background: var(--ri-red); }
+        .msg-info { font-size: 0.65rem; margin-bottom: 4px; opacity: 0.7; font-weight: bold; }
 
         input, select, textarea { width: 100%; background: #000; border: 1px solid var(--ri-border); color: #fff; padding: 10px; margin: 5px 0; }
-        .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 8px; background: #333; }
-        .online { background: #00ff00; box-shadow: 0 0 8px #00ff00; }
+        .btn { background: var(--ri-red); color: white; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        .delete-btn { color: #444; cursor: pointer; font-family: monospace; }
         table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
         th, td { border: 1px solid var(--ri-border); padding: 10px; text-align: left; }
         .hidden { display: none !important; }
-    </style></head><body>
+    </style>
+</head><body>
 
     <div id="lockdown-bar">SYSTEM LOCKDOWN</div>
     <div id="announcement-bar"></div>
@@ -83,7 +77,7 @@
     <div id="main">
         <div id="page-login" class="page visible">
             <div class="card" style="max-width:380px; margin:100px auto;">
-                <h2 style="text-align:center; letter-spacing:2px;">IDENTITY VERIFICATION</h2>
+                <h2 style="text-align:center;">IDENTITY VERIFICATION</h2>
                 <input type="text" id="user-in" placeholder="OPERATIVE ID">
                 <input type="password" id="pass-in" placeholder="ACCESS CODE">
                 <button class="btn" style="width:100%; margin-top:10px;" onclick="login()">INITIALIZE SESSION</button>
@@ -92,6 +86,14 @@
 
         <div id="page-manage-users" class="page">
             <h2>MASTER OVERRIDE</h2>
+            <div class="card" style="border: 2px solid var(--ri-red);">
+                <h3>SYSTEM BROADCAST / LOCKDOWN</h3>
+                <input type="text" id="ann-in" placeholder="Emergency message...">
+                <button class="btn" onclick="postAnn()">POST BROADCAST</button>
+                <button class="btn" style="background:#333" onclick="set(ref(db, 'announcement'), '')">CLEAR</button>
+                <button class="btn" style="width:100%; margin-top:10px;" onclick="toggleLockdown()">TOGGLE LOCKDOWN</button>
+            </div>
+
             <div class="card">
                 <h3>AUTHORIZE OPERATIVE</h3>
                 <input type="text" id="new-u" placeholder="Name">
@@ -101,41 +103,40 @@
                     <select id="new-d"><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select>
                     <select id="new-o"><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select>
                 </div>
-                <button class="btn" onclick="createUser()">AUTHORIZE</button>
+                <button class="btn" style="width:100%; margin-top:10px;" onclick="createUser()">AUTHORIZE</button>
             </div>
-            <div class="card"><h3>REGISTRY</h3><tbody id="user-list"></tbody></table></div>
+
+            <div class="card">
+                <h3>OPERATIVE REGISTRY</h3>
+                <table><thead><tr><th>User</th><th>Rank</th><th>Dept</th><th>Oversight</th><th>Action</th></tr></thead><tbody id="user-list"></tbody></table>
+            </div>
+        </div>
+
+        <div id="page-ax-logs" class="page">
+            <h2>AX SECURE LOGS</h2>
+            <div class="card"><table><thead><tr><th>Time</th><th>User</th><th>IP Address</th></tr></thead><tbody id="ax-list"></tbody></table></div>
         </div>
 
         <div id="page-create" class="page">
             <div class="card">
                 <h3>ARCHIVE SUBMISSION</h3>
-                <input type="text" id="f-name" placeholder="Subject / Dossier Title">
-                <select id="f-tab">
-                    <option value="High Command">High Command</option>
-                    <option value="Academy">Academy</option>
-                    <option value="Operations">Operations</option>
-                    <option value="Internal Affairs">Internal Affairs</option>
-                    <option value="Public Affairs">Public Affairs</option>
-                    <option value="Reports">Reports</option>
-                </select>
-                <textarea id="f-text" style="height:250px;" placeholder="Enter report details..."></textarea>
-                <div style="margin-top:10px; border:1px dashed #333; padding:10px;">
-                    <input type="file" id="f-upload" style="border:none;">
-                </div>
-                <button class="btn" style="width:100%; margin-top:15px;" onclick="processSubmission()">FILE RECORD</button>
+                <input type="text" id="f-name" placeholder="Subject">
+                <select id="f-tab"><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select>
+                <textarea id="f-text" style="height:250px;" placeholder="Dossier content..."></textarea>
+                <input type="file" id="f-upload">
+                <button class="btn" style="width:100%; margin-top:10px;" onclick="processSubmission()">FILE RECORD</button>
             </div>
         </div>
 
         <div id="page-dept" class="page"><h2 id="dept-title">ARCHIVE</h2><div id="list-files"></div></div>
-        <div id="page-personnel" class="page"><h2>PERSONNEL</h2><div class="card"><table><thead><tr><th>Status</th><th>Name</th><th>Rank</th><th>Oversight</th><th>Dept</th></tr></thead><tbody id="personnel-body"></tbody></table></div></div>
+        <div id="page-personnel" class="page"><h2>PERSONNEL</h2><div class="card"><table><thead><tr><th>User</th><th>Rank</th><th>Oversight</th><th>Dept</th></tr></thead><tbody id="personnel-body"></tbody></table></div></div>
         <div id="page-audit" class="page"><h2>AUDIT LOGS</h2><div class="card"><table><tbody id="audit-list"></tbody></table></div></div>
-        <div id="page-ax-logs" class="page"><h2>AX SECURE LOGS</h2><div class="card"><table><thead><tr><th>Time</th><th>User</th><th>IP Address</th></tr></thead><tbody id="ax-list"></tbody></table></div></div>
         
         <div id="page-chat" class="page">
             <h2>GLOBAL COMMS</h2>
             <div id="chat-window"></div>
             <div class="chat-controls">
-                <input type="text" id="chat-in" placeholder="Type message..." onkeypress="if(event.key==='Enter') sendChat()">
+                <input type="text" id="chat-in" placeholder="Enter message..." onkeypress="if(event.key==='Enter') sendChat()">
                 <button class="btn" onclick="sendChat()">SEND</button>
             </div>
         </div>
@@ -148,7 +149,7 @@
         const firebaseConfig = { apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", authDomain: "isb-command-portal.firebaseapp.com", projectId: "isb-command-portal", databaseURL: "https://sim-official-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
-        let currentSession = null, cloudUsers = [], masterTS = 0;
+        let currentSession = null, cloudUsers = [];
 
         const AUTH_LEVELS = ["Director", "Deputy Director", "Executive Director", "Site Manager", "Supervisor"];
 
@@ -167,20 +168,15 @@
 
                 const isHC = ["Director", "Deputy Director", "Executive Director", "Site Manager"].includes(user.r);
                 if(isHC) { document.getElementById('nav-admin').classList.remove('hidden'); document.getElementById('nav-audit').classList.remove('hidden'); }
-                
-                // RESTRICTION: Only Supervisor+ can see Manage Files
                 if(AUTH_LEVELS.includes(user.r)) document.getElementById('nav-create').classList.remove('hidden');
-                
                 if(u === "My_AtlasX") document.getElementById('nav-ax-logs').classList.remove('hidden');
                 
                 window.router('chat');
-                const path = user.id === 'master' ? 'presence/master' : `users/${user.id}/lastSeen`;
-                setInterval(() => set(ref(db, path), Date.now()), 30000);
-            } else alert("ACCESS DENIED");
+            } else alert("INVALID CREDENTIALS");
         };
 
         window.router = (id) => {
-            if(id === 'create' && !AUTH_LEVELS.includes(currentSession.r)) { alert("INSUFFICIENT CLEARANCE"); return; }
+            if(id === 'create' && !AUTH_LEVELS.includes(currentSession.r)) return;
             document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
             if(id.startsWith('dept-')) {
                 const target = id.replace('dept-', '');
@@ -192,18 +188,31 @@
                     Object.keys(data).forEach(k => {
                         const f = data[k];
                         if(f.targetTab === target) {
-                            let attach = f.fileData ? `<button class="btn" style="background:#222; font-size:0.7rem; padding: 5px 10px;" onclick="window.downloadFile('${f.fileData}', '${f.fileName}')">💾 DOWNLOAD ATTACHMENT</button>` : '';
-                            cont.innerHTML += `<div class="dossier"><div class="dossier-header"><span>RECORD #${k.substring(1,6)}</span><div class="delete-btn" id="del-${k}" onclick="window.prepDelete('${k}', '${f.name}')">TERMINATE</div></div><div class="dossier-body"><h3 style="margin:0; color:var(--ri-red);">${f.name}</h3>${f.content}<div style="margin-top:20px;">${attach}</div></div><div class="dossier-footer"><span>FILE ORIGIN: ${f.by}</span><span>CLEARANCE: LEVEL 4+</span></div></div>`;
+                            let attach = f.fileData ? `<button class="btn" style="background:#222; font-size:0.7rem;" onclick="window.downloadFile('${f.fileData}', '${f.fileName}')">💾 DOWNLOAD</button>` : '';
+                            cont.innerHTML += `<div class="dossier"><div class="dossier-header"><span>RECORD #${k.substring(1,6)}</span><div class="delete-btn" onclick="window.prepDelete('${k}', '${f.name}')">TERMINATE</div></div><div class="dossier-body"><h3>${f.name}</h3>${f.content}<br>${attach}</div><div class="dossier-footer"><span>BY: ${f.by}</span></div></div>`;
                         }
                     });
                 });
             } else { document.getElementById('page-'+id).classList.add('visible'); }
         };
 
+        window.updateUserVal = (id, field, val) => update(ref(db, `users/${id}`), { [field]: val });
+
+        onValue(ref(db, 'users'), (snap) => {
+            cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
+            document.getElementById('personnel-body').innerHTML = cloudUsers.map(u => `<tr><td>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d}</td></tr>`).join('');
+            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr>
+                <td>${u.u}</td>
+                <td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select></td>
+                <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select></td>
+                <td><select onchange="updateUserVal('${u.id}', 'o', this.value)"><option value="${u.o}">${u.o}</option><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></td>
+                <td><button onclick="remove(ref(db, 'users/${u.id}'))">REVOKE</button></td>
+            </tr>`).join('');
+        });
+
+        window.prepDelete = (id, name) => { if(confirm("Purge record?")) { remove(ref(db, `files/${id}`)); push(ref(db, 'audit'), { t: new Date().toLocaleString(), u: currentSession.u, a: "PURGED", f: name }); } };
         window.processSubmission = async () => {
-            if(!AUTH_LEVELS.includes(currentSession.r)) return alert("SUBMISSION DENIED: RANK ERROR");
             const name = document.getElementById('f-name').value, tab = document.getElementById('f-tab').value, txt = document.getElementById('f-text').value, fileIn = document.getElementById('f-upload').files[0];
-            if(!name || !txt) return;
             let fileData = null, fileName = null;
             if(fileIn) {
                 fileName = fileIn.name;
@@ -211,38 +220,22 @@
             }
             push(ref(db, 'files'), { name, targetTab: tab, content: txt, by: currentSession.u, fileData, fileName });
             push(ref(db, 'audit'), { t: new Date().toLocaleString(), u: currentSession.u, a: "ARCHIVED", f: name });
-            document.getElementById('f-name').value = ""; document.getElementById('f-text').value = ""; document.getElementById('f-upload').value = "";
-            alert("RECORD FILED");
+            alert("FILED");
         };
 
         window.downloadFile = (d, n) => { const a = document.createElement('a'); a.href = d; a.download = n; a.click(); };
         window.postAnn = () => set(ref(db, 'announcement'), document.getElementById('ann-in').value);
-        window.toggleLockdown = () => { onValue(ref(db, 'lockdown'), snap => set(ref(db, 'lockdown'), !snap.val()), {onlyOnce: true}); };
-        
-        onValue(ref(db, 'announcement'), snap => { const b = document.getElementById('announcement-bar'); b.innerText = snap.val(); b.style.display = snap.val() ? 'block' : 'none'; });
-        onValue(ref(db, 'lockdown'), snap => {
-            const active = snap.val();
-            document.body.classList.toggle('lockdown-active', active);
-            document.getElementById('lockdown-bar').style.display = active ? 'block' : 'none';
-        });
-
-        window.updateUserVal = (id, field, val) => update(ref(db, `users/${id}`), { [field]: val });
-        onValue(ref(db, 'users'), (snap) => {
-            cloudUsers = snap.val() ? Object.keys(snap.val()).map(k => ({...snap.val()[k], id: k})) : [];
-            const atlasRow = `<tr><td><div class="status-dot"></div></td><td>My_AtlasX</td><td>Site Manager</td><td>High Command</td><td>High Command</td></tr>`;
-            document.getElementById('personnel-body').innerHTML = atlasRow + cloudUsers.map(u => `<tr><td><div class="status-dot"></div></td><td>${u.u}</td><td>${u.r}</td><td>${u.o||'None'}</td><td>${u.d}</td></tr>`).join('');
-            document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr><td>${u.u}</td><td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Supervisor">Supervisor</option><option value="Agent">Agent</option></select></td><td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Internal Affairs">Internal Affairs</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select></td><td><button class="btn" style="padding:2px 8px;" onclick="remove(ref(db, 'users/${u.id}'))">REVOKE</button></td></tr>`).join('');
-        });
-
+        window.toggleLockdown = () => onValue(ref(db, 'lockdown'), s => set(ref(db, 'lockdown'), !s.val()), {onlyOnce: true});
+        onValue(ref(db, 'announcement'), s => { const b = document.getElementById('announcement-bar'); b.innerText = s.val(); b.style.display = s.val() ? 'block' : 'none'; });
+        onValue(ref(db, 'lockdown'), s => document.body.classList.toggle('lockdown-active', s.val()));
         onValue(ref(db, 'chat'), snap => {
             const win = document.getElementById('chat-window');
-            win.innerHTML = Object.values(snap.val()||{}).map(m => {
-                const isMe = currentSession && m.u === currentSession.u;
-                return `<div class="msg ${isMe ? 'msg-right' : 'msg-left'}"><div class="msg-info">${m.u}</div>${m.m}</div>`;
-            }).join('');
+            win.innerHTML = Object.values(snap.val()||{}).map(m => `<div class="msg ${m.u === currentSession?.u ? 'msg-right' : 'msg-left'}"><div class="msg-info">${m.u}</div>${m.m}</div>`).join('');
             win.scrollTop = win.scrollHeight;
         });
-
-        window.sendChat = () => { const inp = document.getElementById('chat-in'); if(inp.value) { push(ref(db, 'chat'), { u: currentSession.u, m: inp.value, t: Date.now() }); inp.value = ""; } };
-        window.createUser = () => push(ref(db, 'users'), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, o: document.getElementById('new-o').value, lastSeen: 0 });
-    </script></body></html>
+        window.sendChat = () => { const inp = document.getElementById('chat-in'); if(inp.value) { push(ref(db, 'chat'), { u: currentSession.u, m: inp.value }); inp.value = ""; } };
+        onValue(ref(db, 'ax_logs'), snap => document.getElementById('ax-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l=>`<tr><td>${l.t}</td><td>${l.u}</td><td>${l.ip}</td></tr>`).join(''));
+        onValue(ref(db, 'audit'), snap => document.getElementById('audit-list').innerHTML = Object.values(snap.val()||{}).reverse().map(l=>`<tr><td>${l.t}</td><td>${l.u}</td><td>${l.a}</td><td>${l.f}</td></tr>`).join(''));
+        window.createUser = () => push(ref(db, 'users'), { u: document.getElementById('new-u').value, p: document.getElementById('new-p').value, r: document.getElementById('new-r').value, d: document.getElementById('new-d').value, o: document.getElementById('new-o').value });
+    </script>
+</body></html>
