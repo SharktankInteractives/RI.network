@@ -57,7 +57,74 @@
 </head><body>
 
 
-    <div id="lockdown-bar">SYSTEM LOCKDOWN</div>
+   <div id="lockdown-bar">SYSTEM LOCKDOWN</div>
+
+<style>
+/* 2. THE CSS: Visual styling and rapid-flash animation */
+#lockdown-bar { 
+    display: none; /* Hidden by default */
+    background: rgba(0, 0, 0, 0.85); 
+    color: #ff0000; 
+    padding: 15px; 
+    text-align: center; 
+    font-weight: 900; 
+    z-index: 10001; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    letter-spacing: 8px; 
+    border-bottom: 3px solid #ff0000; 
+    /* This connects to the animation below */
+    animation: rapid-flash 0.8s infinite; 
+}
+
+/* The screen-wide pulse effect for the body */
+body.lockdown-active { 
+    box-shadow: inset 0 0 100px #ff0000; 
+    border: 4px solid #ff0000; 
+    animation: pulse-red 1.5s infinite; 
+}
+
+/* Rapid flash between Red/Dark and White/Bright */
+@keyframes rapid-flash { 
+    0%, 100% { background: rgba(0, 0, 0, 0.85); color: #ff0000; } 
+    50% { background: rgba(180, 0, 0, 0.95); color: #fff; } 
+}
+
+/* Slow outer glow pulse */
+@keyframes pulse-red { 
+    0% { box-shadow: inset 0 0 40px #660000; } 
+    50% { box-shadow: inset 0 0 120px #ff0000; } 
+    100% { box-shadow: inset 0 0 40px #660000; } 
+}
+</style>
+
+<script type="module">
+// 3. THE JAVASCRIPT: The logic that listens to Firebase
+import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const db = getDatabase();
+
+// LISTENER: Watches the database for changes
+onValue(ref(db, 'lockdown'), (snapshot) => {
+    const isActive = snapshot.val();
+    
+    // Toggle the flashing top bar
+    document.getElementById('lockdown-bar').style.display = isActive ? 'block' : 'none';
+    
+    // Toggle the screen-wide red pulse class on the <body>
+    document.body.classList.toggle('lockdown-active', isActive);
+});
+
+// 4. THE MASTER TOGGLE: The function to turn it on/off
+window.toggleLockdown = () => {
+    onValue(ref(db, 'lockdown'), (snapshot) => {
+        // Sets the database value to the opposite of what it currently is
+        set(ref(db, 'lockdown'), !snapshot.val());
+    }, { onlyOnce: true });
+};
+</script>
     <div id="announcement-bar"></div>
 
     <div id="sidebar">
