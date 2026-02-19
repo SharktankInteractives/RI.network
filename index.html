@@ -150,10 +150,9 @@
             </div>
         </div>
     </div>
-
 <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getDatabase, ref, set, push, onValue, remove, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getDatabase, ref, set, push, onValue, remove, update, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
         const firebaseConfig = { apiKey: "AIzaSyC3eKgmlJzc-0uvSbOPLeUIt7XosKyOmGw", authDomain: "isb-command-portal.firebaseapp.com", projectId: "isb-command-portal", databaseURL: "https://sim-official-default-rtdb.firebaseio.com" };
         const app = initializeApp(firebaseConfig);
@@ -168,6 +167,15 @@
             if (active) {
                 bar.style.display = 'block';
                 document.body.classList.add('lockdown-active');
+                
+                // LIVE KICK: If active and user is logged in but NOT High Command
+                if (currentSession && currentSession.d !== "High Command") {
+                    currentSession = null;
+                    document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+                    document.getElementById('page-login').classList.add('visible');
+                    document.getElementById('secure-nav').classList.add('hidden');
+                    alert("CRITICAL: SYSTEM LOCKDOWN INITIATED. SESSION TERMINATED.");
+                }
             } else {
                 bar.style.display = 'none';
                 document.body.classList.remove('lockdown-active');
@@ -175,8 +183,22 @@
         });
 
         window.toggleLockdown = () => {
+            if (currentSession.d !== "High Command") {
+                alert("ACCESS DENIED: ONLY HIGH COMMAND PERSONNEL MAY INITIATE LOCKDOWN.");
+                return;
+            }
+
             onValue(ref(db, 'lockdown'), (snapshot) => {
-                set(ref(db, 'lockdown'), !snapshot.val());
+                const newState = !snapshot.val();
+                set(ref(db, 'lockdown'), newState);
+                
+                const action = newState ? "ACTIVATED LOCKDOWN" : "DEACTIVATED LOCKDOWN";
+                push(ref(db, 'audit'), { 
+                    t: new Date().toLocaleString(), 
+                    u: currentSession.u, 
+                    a: action, 
+                    f: "SYSTEM" 
+                });
             }, { onlyOnce: true });
         };
 
@@ -185,6 +207,13 @@
             let user = cloudUsers.find(x => x.u === u && x.p === p) || (u === "My_AtlasX" && p === "J!kkl@sIntelligence" ? {u:"My_AtlasX", r:"Site Manager", d:"High Command", o:"High Command", id:"master"} : null);
             
             if(user) {
+                // LOGIN PREVENTION: Check lockdown status before finishing login
+                const ldSnap = await get(ref(db, 'lockdown'));
+                if (ldSnap.val() && user.d !== "High Command") {
+                    alert("TERMINAL UNAVAILABLE: SYSTEM IS UNDER LOCKDOWN.");
+                    return;
+                }
+
                 currentSession = user;
                 document.getElementById('user-display').innerText = `${u} [${user.r}]`;
                 document.getElementById('secure-nav').classList.remove('hidden');
@@ -205,35 +234,43 @@
         };
 
         window.router = (id) => {
-            if(id === 'create' && !AUTH_LEVELS.includes(currentSession.r)) return;
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
-            if(id.startsWith('dept-')) {
-                const target = id.replace('dept-', '');
-                document.getElementById('dept-title').innerText = target.toUpperCase() + " ARCHIVE";
-                document.getElementById('page-dept').classList.add('visible');
-                onValue(ref(db, 'files'), (snap) => {
-                    const cont = document.getElementById('list-files'); cont.innerHTML = "";
-                    const data = snap.val(); if(!data) return;
-                    Object.keys(data).forEach(k => {
-                        const f = data[k];
-                        if(f.targetTab === target) {
-                            let attach = f.fileData ? `<button class="btn" style="background:#222; font-size:0.7rem; margin-top:10px;" onclick="window.downloadFile('${f.fileData}', '${f.fileName}')">💾 DOWNLOAD</button>` : '';
-                            let controls = AUTH_LEVELS.includes(currentSession.r) ? `
-                                <div style="display:flex; gap:10px;">
-                                    <div class="btn" style="background:#444; font-size:0.7rem;" onclick="window.prepEdit('${k}')">EDIT</div>
-                                    <div class="delete-btn" style="cursor:pointer; color:var(--ri-red); font-weight:bold; font-size:0.7rem;" onclick="window.prepDelete('${k}', '${f.name}')">TERMINATE</div>
-                                </div>` : '';
+            // NAVIGATION BLOCK: Verify lockdown status on every page change
+            get(ref(db, 'lockdown')).then((snap) => {
+                if (snap.val() && currentSession.d !== "High Command") {
+                    alert("ACCESS DENIED: ARCHIVES SEALED DURING LOCKDOWN.");
+                    return;
+                }
 
-                            cont.innerHTML += `
-                                <div class="dossier">
-                                    <div class="dossier-header"><span>RECORD #${k.substring(1,6)}</span>${controls}</div>
-                                    <div class="dossier-body"><h3>${f.name}</h3>${f.content}<br>${attach}</div>
-                                    <div class="dossier-footer"><span>BY: ${f.by}</span>${f.lastEdited ? `<span style="color:#888;">REVISED: ${f.lastEdited}</span>` : ''}</div>
-                                </div>`;
-                        }
+                if(id === 'create' && !AUTH_LEVELS.includes(currentSession.r)) return;
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('visible'));
+                if(id.startsWith('dept-')) {
+                    const target = id.replace('dept-', '');
+                    document.getElementById('dept-title').innerText = target.toUpperCase() + " ARCHIVE";
+                    document.getElementById('page-dept').classList.add('visible');
+                    onValue(ref(db, 'files'), (snap) => {
+                        const cont = document.getElementById('list-files'); cont.innerHTML = "";
+                        const data = snap.val(); if(!data) return;
+                        Object.keys(data).forEach(k => {
+                            const f = data[k];
+                            if(f.targetTab === target) {
+                                let attach = f.fileData ? `<button class="btn" style="background:#222; font-size:0.7rem; margin-top:10px;" onclick="window.downloadFile('${f.fileData}', '${f.fileName}')">💾 DOWNLOAD</button>` : '';
+                                let controls = AUTH_LEVELS.includes(currentSession.r) ? `
+                                    <div style="display:flex; gap:10px;">
+                                        <div class="btn" style="background:#444; font-size:0.7rem;" onclick="window.prepEdit('${k}')">EDIT</div>
+                                        <div class="delete-btn" style="cursor:pointer; color:var(--ri-red); font-weight:bold; font-size:0.7rem;" onclick="window.prepDelete('${k}', '${f.name}')">TERMINATE</div>
+                                    </div>` : '';
+
+                                cont.innerHTML += `
+                                    <div class="dossier">
+                                        <div class="dossier-header"><span>RECORD #${k.substring(1,6)}</span>${controls}</div>
+                                        <div class="dossier-body"><h3>${f.name}</h3>${f.content}<br>${attach}</div>
+                                        <div class="dossier-footer"><span>BY: ${f.by}</span>${f.lastEdited ? `<span style="color:#888;">REVISED: ${f.lastEdited}</span>` : ''}</div>
+                                    </div>`;
+                            }
+                        });
                     });
-                });
-            } else { document.getElementById('page-'+id).classList.add('visible'); }
+                } else { document.getElementById('page-'+id).classList.add('visible'); }
+            });
         };
 
         window.prepEdit = (id) => {
@@ -298,7 +335,7 @@
             document.getElementById('user-list').innerHTML = cloudUsers.map(u => `<tr>
                 <td>${u.u}</td>
                 <td><select onchange="updateUserVal('${u.id}', 'r', this.value)"><option value="${u.r}">${u.r}</option><option value = "Overseer">Overseer</option><option value="Director">Director</option><option value="Deputy Director">Deputy Director</option><option value="Supervisor">Supervisor</option><option value="Special Agent">Special Agent</option><option value="Field Agent">Field Agent</option><option value="Junior Agent">Junior Agent</option><option value="Initiate">Initiate</option></select></td>
-                <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="Documents">Documents</option><option value="Public Affairs">Public Affairs</option><option value="Reports">Reports</option></select></td>
+                <td><select onchange="updateUserVal('${u.id}', 'd', this.value)"><option value="${u.d}">${u.d}</option><option value="High Command">High Command</option><option value="Academy">Academy</option><option value="Operations">Operations</option><option value="IAD">IAD</option><option value="Public Affairs">Public Affairs</option><option value="Regular">Regular</option></select></td>
                 <td><select onchange="updateUserVal('${u.id}', 'o', this.value)"><option value="${u.o}">${u.o}</option><option value="None">None</option><option value="INF">INF</option><option value="SOB">SOB</option><option value="RSF">RSF</option><option value="High Command">High Command</option></select></td>
                 <td><button class="btn" style="background:#444; padding:5px 10px;" onclick="window.revokeUser('${u.id}')">REVOKE</button></td>
             </tr>`).join('');
